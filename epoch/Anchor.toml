@@ -1,8 +1,11 @@
+[toolchain]
+
 [features]
-resolution = []
+resolution = true
+skip-lint = false
 
 [programs.devnet]
-epoch = "11111111111111111111111111111111"
+epoch = "5q76QvDTQfCzzQ1wwda9Qye6E9XTR4ij95HtCaZZ3zUy"
 
 [registry]
 url = "https://api.apr.dev"

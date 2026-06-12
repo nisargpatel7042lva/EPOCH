@@ -7,12 +7,14 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("11111111111111111111111111111111");
+declare_id!("5q76QvDTQfCzzQ1wwda9Qye6E9XTR4ij95HtCaZZ3zUy");
 
 #[ephemeral]
 #[program]
 pub mod epoch {
     use super::*;
+
+    // ── Base layer ──────────────────────────────────────────────────────────
 
     pub fn initialize_market(
         ctx: Context<InitializeMarket>,
@@ -52,5 +54,27 @@ pub mod epoch {
         outcome: bool,
     ) -> Result<()> {
         instructions::settlement_action::handler(ctx, yes_total, no_total, resolver_price, outcome)
+    }
+
+    // ── Ephemeral Rollup ────────────────────────────────────────────────────
+
+    pub fn take_position(
+        ctx: Context<TakePosition>,
+        yes_amount: u64,
+        no_amount: u64,
+    ) -> Result<()> {
+        instructions::take_position::handler(ctx, yes_amount, no_amount)
+    }
+
+    pub fn adjust_position(
+        ctx: Context<AdjustPosition>,
+        add_yes: u64,
+        add_no: u64,
+    ) -> Result<()> {
+        instructions::adjust_position::handler(ctx, add_yes, add_no)
+    }
+
+    pub fn commit_and_settle(ctx: Context<CommitAndSettle>) -> Result<()> {
+        instructions::commit_and_settle::handler(ctx)
     }
 }
