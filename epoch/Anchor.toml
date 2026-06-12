@@ -2,7 +2,7 @@
 resolution = []
 
 [programs.devnet]
-epoch = "PLACEHOLDER_PROGRAM_ID"
+epoch = "11111111111111111111111111111111"
 
 [registry]
 url = "https://api.apr.dev"

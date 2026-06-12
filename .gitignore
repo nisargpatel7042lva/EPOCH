@@ -1,0 +1,40 @@
+# Rust / Cargo
+target/
+**/*.rs.bk
+Cargo.lock
+
+# Anchor build artifacts
+.anchor/
+epoch/.anchor/
+epoch/target/
+epoch/**/.anchor/
+
+# Solana keypairs — never commit private keys
+**/*.json
+!epoch/Anchor.toml
+# Re-include non-key JSON if needed below:
+# !some/config.json
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Node / TypeScript
+node_modules/
+epoch/node_modules/
+dist/
+*.js.map
+.yarn/
+yarn-error.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Skills installer
+.agents/
+skills-lock.json
