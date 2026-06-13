@@ -7,7 +7,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("5q76QvDTQfCzzQ1wwda9Qye6E9XTR4ij95HtCaZZ3zUy");
+declare_id!("C6nt5YvgdgNKETYgHQF9Dm8XQdAreU3n5Pk4CHmrQVvu");
 
 #[ephemeral]
 #[program]
@@ -42,6 +42,14 @@ pub mod epoch {
         instructions::delegate_market::handler(ctx, market_id)
     }
 
+    pub fn initialize_position(ctx: Context<InitializePosition>) -> Result<()> {
+        instructions::initialize_position::handler(ctx)
+    }
+
+    pub fn delegate_position(ctx: Context<DelegatePosition>) -> Result<()> {
+        instructions::delegate_position::handler(ctx)
+    }
+
     pub fn withdraw_winnings(ctx: Context<WithdrawWinnings>) -> Result<()> {
         instructions::withdraw_winnings::handler(ctx)
     }
@@ -74,7 +82,7 @@ pub mod epoch {
         instructions::adjust_position::handler(ctx, add_yes, add_no)
     }
 
-    pub fn commit_and_settle(ctx: Context<CommitAndSettle>) -> Result<()> {
+    pub fn commit_and_settle<'info>(ctx: Context<'info, CommitAndSettle<'info>>) -> Result<()> {
         instructions::commit_and_settle::handler(ctx)
     }
 }

@@ -1,16 +1,14 @@
 use anchor_lang::prelude::*;
-use anchor_lang::system_program;
 use anchor_lang::AccountsExit;
 use ephemeral_rollups_sdk::anchor::commit;
 use ephemeral_rollups_sdk::ephem::{FoldableIntentBuilder, MagicIntentBundleBuilder};
 
 use crate::errors::EpochError;
-use crate::state::{Market, MarketStatus, Position, Vault};
+use crate::state::{Market, MarketStatus, Position};
 
 #[commit]
 #[derive(Accounts)]
 pub struct AdjustPosition<'info> {
-    #[account(mut)]
     pub user: Signer<'info>,
 
     #[account(
@@ -27,13 +25,6 @@ pub struct AdjustPosition<'info> {
     )]
     pub position: Account<'info, Position>,
 
-    #[account(
-        mut,
-        seeds = [b"vault", market.key().as_ref()],
-        bump = vault.bump
-    )]
-    pub vault: Account<'info, Vault>,
-
     #[account(mut)]
     pub payer: Signer<'info>,
 
@@ -49,27 +40,6 @@ pub fn handler(ctx: Context<AdjustPosition>, add_yes: u64, add_no: u64) -> Resul
         !ctx.accounts.market.is_expired(Clock::get()?.unix_timestamp),
         EpochError::MarketExpired
     );
-
-    let total = add_yes
-        .checked_add(add_no)
-        .ok_or(EpochError::Overflow)?;
-
-    if total > 0 {
-        system_program::transfer(
-            CpiContext::new(
-                ctx.accounts.system_program.key(),
-                system_program::Transfer {
-                    from: ctx.accounts.user.to_account_info(),
-                    to: ctx.accounts.vault.to_account_info(),
-                },
-            ),
-            total,
-        )?;
-
-        ctx.accounts.vault.total_deposited = ctx.accounts.vault.total_deposited
-            .checked_add(total)
-            .ok_or(EpochError::Overflow)?;
-    }
 
     if add_yes > 0 {
         ctx.accounts.position.yes_amount = ctx.accounts.position.yes_amount
@@ -96,7 +66,10 @@ pub fn handler(ctx: Context<AdjustPosition>, add_yes: u64, add_no: u64) -> Resul
         ctx.accounts.magic_context.to_account_info(),
         ctx.accounts.magic_program.to_account_info(),
     )
-    .commit(&[ctx.accounts.market.to_account_info()])
+    .commit(&[
+        ctx.accounts.market.to_account_info(),
+        ctx.accounts.position.to_account_info(),
+    ])
     .build_and_invoke()?;
 
     Ok(())

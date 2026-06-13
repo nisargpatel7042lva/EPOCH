@@ -29,7 +29,7 @@ pub struct CommitAndSettle<'info> {
     pub oracle_feed: UncheckedAccount<'info>,
 }
 
-pub fn handler(ctx: Context<CommitAndSettle>) -> Result<()> {
+pub fn handler<'info>(ctx: Context<'info, CommitAndSettle<'info>>) -> Result<()> {
     let market = &ctx.accounts.market;
 
     // Parse oracle price from Pyth Lazer account layout
@@ -67,7 +67,7 @@ pub fn handler(ctx: Context<CommitAndSettle>) -> Result<()> {
             },
             ShortAccountMeta {
                 pubkey: ctx.accounts.vault.key(),
-                is_writable: true,
+                is_writable: false,
             },
         ],
         args: ActionArgs::new(instruction_data),
@@ -75,13 +75,23 @@ pub fn handler(ctx: Context<CommitAndSettle>) -> Result<()> {
         compute_units: 200_000,
     };
 
+    // Build the list of accounts to commit+undelegate: market first, then any
+    // position PDAs passed as remaining_accounts by the crank.
+    let mut to_undelegate: Vec<AccountInfo> = vec![ctx.accounts.market.to_account_info()];
+    for pos in ctx.remaining_accounts.iter() {
+        to_undelegate.push(pos.clone());
+    }
+
     MagicIntentBundleBuilder::new(
         ctx.accounts.payer.to_account_info(),
         ctx.accounts.magic_context.to_account_info(),
         ctx.accounts.magic_program.to_account_info(),
     )
-    .commit_and_undelegate(&[ctx.accounts.market.to_account_info()])
-    .add_post_commit_actions([action])
+    // Use add_post_undelegate_actions (not add_post_commit_actions) so the
+    // settlement_action fires AFTER the accounts are undelegated and owned by
+    // our program again — Account<'info, Market> requires our-program ownership.
+    .commit_and_undelegate(&to_undelegate)
+    .add_post_undelegate_actions([action])
     .build_and_invoke()?;
 
     Ok(())

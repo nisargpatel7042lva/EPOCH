@@ -1,11 +1,10 @@
 use anchor_lang::prelude::*;
-use anchor_lang::system_program;
 use anchor_lang::AccountsExit;
 use ephemeral_rollups_sdk::anchor::commit;
 use ephemeral_rollups_sdk::ephem::{FoldableIntentBuilder, MagicIntentBundleBuilder};
 
 use crate::errors::EpochError;
-use crate::state::{Market, MarketStatus, Position, Vault};
+use crate::state::{Market, MarketStatus, Position};
 
 #[commit]
 #[derive(Accounts)]
@@ -21,20 +20,11 @@ pub struct TakePosition<'info> {
     pub market: Account<'info, Market>,
 
     #[account(
-        init_if_needed,
-        payer = user,
-        space = Position::space(),
+        mut,
         seeds = [b"position", market.key().as_ref(), user.key().as_ref()],
-        bump
+        bump = position.bump
     )]
     pub position: Account<'info, Position>,
-
-    #[account(
-        mut,
-        seeds = [b"vault", market.key().as_ref()],
-        bump = vault.bump
-    )]
-    pub vault: Account<'info, Vault>,
 
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -56,22 +46,6 @@ pub fn handler(ctx: Context<TakePosition>, yes_amount: u64, no_amount: u64) -> R
         .ok_or(EpochError::Overflow)?;
     require!(total >= 10_000, EpochError::InsufficientAmount);
 
-    // Transfer total deposit from user to vault
-    system_program::transfer(
-        CpiContext::new(
-            ctx.accounts.system_program.key(),
-            system_program::Transfer {
-                from: ctx.accounts.user.to_account_info(),
-                to: ctx.accounts.vault.to_account_info(),
-            },
-        ),
-        total,
-    )?;
-
-    // Initialise position fields (safe to always set — seeds guarantee the user/market match)
-    ctx.accounts.position.user = ctx.accounts.user.key();
-    ctx.accounts.position.market = ctx.accounts.market.key();
-    ctx.accounts.position.bump = ctx.bumps.position;
     ctx.accounts.position.yes_amount = ctx.accounts.position.yes_amount
         .checked_add(yes_amount)
         .ok_or(EpochError::Overflow)?;
@@ -87,11 +61,6 @@ pub fn handler(ctx: Context<TakePosition>, yes_amount: u64, no_amount: u64) -> R
         .checked_add(no_amount)
         .ok_or(EpochError::Overflow)?;
 
-    // Update vault accounting
-    ctx.accounts.vault.total_deposited = ctx.accounts.vault.total_deposited
-        .checked_add(total)
-        .ok_or(EpochError::Overflow)?;
-
     // Flush account data to buffer before the commit CPI reads it
     ctx.accounts.market.exit(&crate::ID)?;
 
@@ -105,12 +74,17 @@ pub fn handler(ctx: Context<TakePosition>, yes_amount: u64, no_amount: u64) -> R
         ctx.accounts.market.no_total,
     );
 
+    // Commit both market totals AND the user's position so base-layer state
+    // stays current without requiring a separate commit-position step.
     MagicIntentBundleBuilder::new(
         ctx.accounts.payer.to_account_info(),
         ctx.accounts.magic_context.to_account_info(),
         ctx.accounts.magic_program.to_account_info(),
     )
-    .commit(&[ctx.accounts.market.to_account_info()])
+    .commit(&[
+        ctx.accounts.market.to_account_info(),
+        ctx.accounts.position.to_account_info(),
+    ])
     .build_and_invoke()?;
 
     Ok(())

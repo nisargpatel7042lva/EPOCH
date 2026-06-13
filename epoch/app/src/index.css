@@ -1,0 +1,148 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+
+@font-face {
+  font-family: "Helvetica Regular";
+  src: url("https://db.onlinewebfonts.com/t/a64ff11d2c24584c767f6257e880dc65.woff2") format("woff2"),
+       url("https://db.onlinewebfonts.com/t/a64ff11d2c24584c767f6257e880dc65.ttf") format("truetype");
+}
+
+@theme {
+  --font-helvetica: "Helvetica Regular", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Instrument Serif", serif;
+  --color-bg: #08080f;
+  --color-surface: rgba(255,255,255,0.04);
+  --color-glass: rgba(255,255,255,0.06);
+  --color-glass-strong: rgba(255,255,255,0.10);
+  --color-stroke: rgba(255,255,255,0.08);
+  --color-stroke-bright: rgba(255,255,255,0.16);
+  --color-text: #f0f0f0;
+  --color-muted: rgba(240,240,240,0.45);
+  --color-green: #00ff88;
+  --color-red: #ff4466;
+  --color-blue: #4E85BF;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; min-width: 0; }
+
+body {
+  background: #08080f;
+  color: #f0f0f0;
+  font-family: "Helvetica Regular", ui-sans-serif, system-ui, sans-serif;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Animations ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+
+@keyframes float-particle {
+  0%, 100% { transform: translateY(0px) translateX(0px); opacity: 0.4; }
+  33%       { transform: translateY(-12px) translateX(4px); opacity: 0.7; }
+  66%       { transform: translateY(-6px) translateX(-4px); opacity: 0.5; }
+}
+
+@keyframes scroll-line {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  30%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: translateY(200%); opacity: 0; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── Custom component classes in @layer so Tailwind utilities ALWAYS override ── */
+@layer components {
+  .font-display   { font-family: "Instrument Serif", serif; }
+  .font-helvetica { font-family: "Helvetica Regular", ui-sans-serif, sans-serif; }
+
+  /* GSAP animation start state — overridden by GSAP inline styles on animate */
+  .gsap-hidden { opacity: 0; }
+
+  /* Reusable content container */
+  .content-container {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  /* Section vertical rhythm */
+  .section-padding {
+    padding-top: 5rem;
+    padding-bottom: 5rem;
+  }
+
+  /* Glass surface — NO border-radius here; apply rounded-* via Tailwind */
+  .glass {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .glass-strong {
+    background: rgba(255,255,255,0.10);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid rgba(255,255,255,0.14);
+  }
+
+  .accent-gradient {
+    background: linear-gradient(90deg, #00ff88 0%, #4E85BF 100%);
+  }
+
+  .glow-green { box-shadow: 0 0 24px rgba(0,255,136,0.25), 0 0 64px rgba(0,255,136,0.08); }
+  .glow-red   { box-shadow: 0 0 24px rgba(255,68,102,0.25), 0 0 64px rgba(255,68,102,0.08); }
+
+  .animate-marquee     { animation: marquee 35s linear infinite; white-space: nowrap; }
+  .animate-pulse-dot   { animation: pulse-dot 2s ease-in-out infinite; }
+  .animate-scroll-line { animation: scroll-line 1.6s ease-in-out infinite; }
+}
+
+@media (min-width: 768px) {
+  .content-container {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+  .section-padding {
+    padding-top: 7rem;
+    padding-bottom: 7rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-container {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-dot,
+  .animate-scroll-line,
+  .animate-marquee { animation: none; }
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ── Wallet adapter dark overrides ── */
+.wallet-adapter-modal-wrapper {
+  background: #0d0d18 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 2rem !important;
+}
+.wallet-adapter-modal-title { color: #f0f0f0 !important; }
+.wallet-adapter-button-trigger {
+  background: rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 1rem !important;
+  color: #f0f0f0 !important;
+}

@@ -48,7 +48,10 @@ pub fn handler(ctx: Context<WithdrawWinnings>) -> Result<()> {
             let user_winning_amount = position.winning_amount(outcome);
             require!(user_winning_amount > 0, EpochError::NoWinningPosition);
 
-            let total_pool = market.total_pool();
+            // Prize pool = vault.total_deposited (the initial deposit from market creation).
+            // Positions are virtual units (no SOL transferred per-position), so we
+            // pay each winner their proportional share of the deposited prize pool.
+            let total_pool = ctx.accounts.vault.total_deposited;
             let winning_side_total = if outcome {
                 market.yes_total
             } else {

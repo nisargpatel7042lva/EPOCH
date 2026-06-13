@@ -16,7 +16,6 @@ pub struct SettlementAction<'info> {
     pub market: Account<'info, Market>,
 
     #[account(
-        mut,
         seeds = [b"vault", market.key().as_ref()],
         bump = vault.bump
     )]

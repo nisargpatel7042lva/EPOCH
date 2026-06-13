@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-epoch = "5q76QvDTQfCzzQ1wwda9Qye6E9XTR4ij95HtCaZZ3zUy"
+epoch = "C6nt5YvgdgNKETYgHQF9Dm8XQdAreU3n5Pk4CHmrQVvu"
 
 [registry]
 url = "https://api.apr.dev"
